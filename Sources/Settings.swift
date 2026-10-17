@@ -13,7 +13,7 @@ enum SymbolColor: Int {
     case black = 2
 }
 
-// 설정: 구석, 크기, 투명도, 색, 하나일 때 보이기.
+// 설정: 구석, 크기, 투명도, 색, 하나일 때 보이기, 새 버전 확인.
 final class Settings {
     static let shared = Settings()
     static let changed = Notification.Name("deskonSettingsChanged")
@@ -27,6 +27,7 @@ final class Settings {
             "transparency": 0.4,
             "showWhenSingle": false,
             "color": SymbolColor.auto.rawValue,
+            "checkUpdates": true,
         ])
     }
 
@@ -49,6 +50,12 @@ final class Settings {
     var transparency: CGFloat {
         get { CGFloat(defaults.double(forKey: "transparency")) }
         set { defaults.set(Double(newValue), forKey: "transparency"); notify() }
+    }
+
+    // 30일에 한 번 새 버전 번호 확인(UpdateCheck)
+    var checkUpdates: Bool {
+        get { defaults.bool(forKey: "checkUpdates") }
+        set { defaults.set(newValue, forKey: "checkUpdates"); notify() }
     }
 
     var showWhenSingle: Bool {

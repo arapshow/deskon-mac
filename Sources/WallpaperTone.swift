@@ -5,6 +5,10 @@ import AppKit
 // 그림 파일이 아니거나(동영상 배경 등) 읽지 못하면 nil → 라이트/다크 모드를 따른다.
 @MainActor
 enum WallpaperTone {
+    // 바탕화면 파일마다 작게 줄인 그림 하나(크기 슬라이더를 끌어도 큰 파일을 다시 읽지 않게).
+    private static var thumbKey = ""
+    private static var thumb: CGImage?
+    // 자리별 밝기 결과
     private static var cache: [String: Bool] = [:]
 
     /// rect: 화면 좌표(전역, 아래가 0)의 심볼 자리.
@@ -12,20 +16,35 @@ enum WallpaperTone {
         guard let url = NSWorkspace.shared.desktopImageURL(for: screen) else { return nil }
         let modified = (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate)?
             .timeIntervalSince1970 ?? 0
-        let key = "\(url.path)|\(modified)|\(screen.frame)|\(rect)"
+        let fileKey = "\(url.path)|\(modified)"
+        let key = "\(fileKey)|\(screen.frame)|\(rect)"
         if let hit = cache[key] { return hit }
 
-        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
-              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
+        guard let image = thumbnail(url, key: fileKey) else { return nil }
         let options = NSWorkspace.shared.desktopImageOptions(for: screen) ?? [:]
         guard let crop = imageRect(for: rect, on: screen, image: image, options: options),
               let part = image.cropping(to: crop),
               let brightness = averageBrightness(part) else { return nil }
 
         let dark = brightness < 0.5
-        if cache.count > 32 { cache.removeAll() }
+        if cache.count > 64 { cache.removeAll() }
         cache[key] = dark
         return dark
+    }
+
+    // 긴 변 1024픽셀로 줄인 그림. 밝기만 재므로 이 정도면 충분하다.
+    private static func thumbnail(_ url: URL, key: String) -> CGImage? {
+        if key == thumbKey { return thumb }
+        thumbKey = key
+        thumb = nil
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: 1024,
+        ]
+        thumb = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+        return thumb
     }
 
     // 화면의 자리 → 그림 픽셀 자리. 기본값인 '화면 채우기'(가운데 맞춰 넘치는 부분 자름)로 계산하고,

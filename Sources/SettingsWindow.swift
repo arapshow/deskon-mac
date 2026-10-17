@@ -30,6 +30,7 @@ final class SettingsWindowController: NSWindowController {
     func refresh() {
         guard window?.isVisible == true else { return }
         model.reloadSpaces()
+        if model.updateAvailable != UpdateCheck.updateAvailable { model.updateAvailable = UpdateCheck.updateAvailable }
     }
 }
 
@@ -42,6 +43,8 @@ final class SettingsModel: ObservableObject {
     @Published var showWhenSingle = Settings.shared.showWhenSingle
     @Published var color = Settings.shared.color
     @Published var launchAtLogin = false
+    @Published var checkUpdates = Settings.shared.checkUpdates
+    @Published var updateAvailable = UpdateCheck.updateAvailable
 
     func reload() {
         let settings = Settings.shared
@@ -50,6 +53,8 @@ final class SettingsModel: ObservableObject {
         transparency = Double(settings.transparency)
         showWhenSingle = settings.showWhenSingle
         color = settings.color
+        checkUpdates = settings.checkUpdates
+        updateAvailable = UpdateCheck.updateAvailable
         launchAtLogin = SMAppService.mainApp.status == .enabled
         reloadSpaces()
     }
@@ -91,6 +96,12 @@ final class SettingsModel: ObservableObject {
         Settings.shared.color = value
     }
 
+    func setCheckUpdates(_ value: Bool) {
+        checkUpdates = value
+        Settings.shared.checkUpdates = value
+        if value { UpdateCheck.runIfDue() }
+    }
+
     func setShowWhenSingle(_ value: Bool) {
         showWhenSingle = value
         Settings.shared.showWhenSingle = value
@@ -98,14 +109,35 @@ final class SettingsModel: ObservableObject {
 
     // 자동 켜기는 macOS가 기억한다(시스템 설정 > 일반 > 로그인 항목).
     func setLaunchAtLogin(_ value: Bool) {
+        var failure: Error?
         do {
             if value {
                 try SMAppService.mainApp.register()
             } else {
                 try SMAppService.mainApp.unregister()
             }
-        } catch {}
-        launchAtLogin = SMAppService.mainApp.status == .enabled
+        } catch {
+            failure = error
+        }
+        let status = SMAppService.mainApp.status
+        launchAtLogin = status == .enabled
+        guard value, status != .enabled else { return }
+
+        // 시스템 설정 > 일반 > 로그인 항목에서 deskON이 꺼져 있으면 macOS가 허락을 기다린다. 그 화면을 바로 연다.
+        if status == .requiresApproval {
+            SMAppService.openSystemSettingsLoginItems()
+            alert("Allow deskON in Login Items",
+                  "Turn on deskON in System Settings › General › Login Items, then try again.")
+        } else {
+            alert("Couldn't turn on Open at login", failure?.localizedDescription ?? "Please try again.")
+        }
+    }
+
+    private func alert(_ title: String, _ text: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = text
+        alert.runModal()
     }
 }
 
@@ -169,6 +201,8 @@ struct SettingsView: View {
                            isOn: Binding(get: { model.showWhenSingle }, set: { model.setShowWhenSingle($0) }))
                     Toggle("Open at login",
                            isOn: Binding(get: { model.launchAtLogin }, set: { model.setLaunchAtLogin($0) }))
+                    Toggle("Check for updates",
+                           isOn: Binding(get: { model.checkUpdates }, set: { model.setCheckUpdates($0) }))
                 }
             }
             .formStyle(.grouped)
@@ -178,7 +212,8 @@ struct SettingsView: View {
             HStack(spacing: 6) {
                 Text("deskON \(Guide.version)  ·")
                     .foregroundColor(.secondary)
-                Button("Guide") { Guide.open() }
+                // 새 버전이 있으면 Guide 대신 Update available(누르면 소개 페이지)
+                Button(model.updateAvailable ? "Update available" : "Guide") { Guide.open() }
                     .buttonStyle(.link)
             }
             .font(.footnote)

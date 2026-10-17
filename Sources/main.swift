@@ -5,6 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var overlay: Overlay!
     private lazy var settingsWindow = SettingsWindowController()
     private var timer: Timer?
+    private var updateTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         overlay = Overlay { [weak self] event, view in self?.showMenu(event, from: view) }
@@ -20,8 +21,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // 데스크탑을 더하거나 뺄 때는 알림이 오지 않아서 2초마다 가볍게 확인한다.
         timer = Timer.scheduledTimer(timeInterval: 2, target: self, selector: #selector(refresh),
                                      userInfo: nil, repeats: true)
+        timer?.tolerance = 0.5   // 정확히 2초일 필요 없음, macOS가 다른 일과 묶어 깨우게(배터리)
 
         overlay.update()
+
+        // 새 버전 확인: 켤 때 한 번, 켜 둔 채로 오래 쓰는 경우를 위해 6시간마다 '30일 지났나'만 본다.
+        UpdateCheck.runIfDue()
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 6 * 60 * 60, repeats: true) { _ in
+            Task { @MainActor in UpdateCheck.runIfDue() }
+        }
 
         // 처음 실행할 때만 설정 창을 띄워 켜졌다는 걸 알린다.
         if !UserDefaults.standard.bool(forKey: "launchedBefore") {

@@ -1,6 +1,7 @@
 import AppKit
 
-// # 심볼. 좌표는 HANDOFF.md의 100x100 정의를 그대로 쓴다.
+// # 심볼. 100x100 좌표: 가로 막대 y=35·65(x 10~90), 세로 막대 x=35·65(y 10~90).
+// 데스크탑 1~4번에 막대를 위 순서대로 하나씩 더 그리고, 5번부터는 # 전체를 주황으로.
 final class SymbolView: NSView {
     var space = 1 { didSet { if space != oldValue { needsDisplay = true } } }
     var onClick: ((NSEvent) -> Void)?

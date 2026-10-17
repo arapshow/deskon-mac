@@ -29,12 +29,15 @@ codesign --force --sign - "$APP" >/dev/null 2>&1
 # 다른 사람에게 줄 dmg(소개 페이지 deskon.arapshow.net에서 받는 파일)
 dmg/make-dmg.sh || { echo "dmg 만들기에 실패했습니다. 이 창 내용을 캡처해 Claude에게 보내 주세요."; pause; exit 1; }
 VER=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Info.plist)
-mkdir -p site/download
-rm -f site/download/deskON*
-cp "build/deskON-$VER.dmg" site/download/
-# 소개 페이지의 다운로드 링크·단추 글자·파일 크기를 새 버전에 맞춘다.
-SIZE=$(awk "BEGIN { printf \"%.1f\", $(stat -f %z "build/deskON-$VER.dmg") / 1000000 }")
-sed -i '' -E "s/deskON-[0-9.]+\.dmg/deskON-$VER.dmg/g; s/deskON [0-9.]+ 받기/deskON $VER 받기/; s/(deskON-$VER\.dmg · )[0-9.]+ MB/\1$SIZE MB/" site/index.html
+# 소개 페이지 폴더(site/)가 있는 비공개 저장소에서만. 공개 사본에는 없다.
+if [ -f site/index.html ]; then
+  mkdir -p site/download
+  rm -f site/download/deskON*
+  cp "build/deskON-$VER.dmg" site/download/
+  # 소개 페이지의 다운로드 링크·단추 글자·파일 크기를 새 버전에 맞춘다.
+  SIZE=$(awk "BEGIN { printf \"%.1f\", $(stat -f %z "build/deskON-$VER.dmg") / 1000000 }")
+  sed -i '' -E "s/deskON-[0-9.]+\.dmg/deskON-$VER.dmg/g; s/deskON [0-9.]+ 받기/deskON $VER 받기/; s/(deskON-$VER\.dmg · )[0-9.]+ MB/\1$SIZE MB/" site/index.html
+fi
 
 # 켜져 있던 deskON을 끄고 새 것으로 바꾼다.
 pkill -x deskon 2>/dev/null
