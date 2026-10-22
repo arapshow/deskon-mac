@@ -11,7 +11,7 @@
 화면 모서리의 # 하나로, 지금 몇 번째 데스크탑인지 바로 알 수 있는 작은 맥 유틸입니다.
 A tiny Mac utility that shows which desktop you're on with a single # in the corner.
 
-소개: https://deskon.arapshow.net
+소개: https://tools.arapshow.net/deskon/
 
 ## 다운로드 · Download
 

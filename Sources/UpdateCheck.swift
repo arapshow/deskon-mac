@@ -5,7 +5,7 @@ import AppKit
 // 설정 창의 Check for updates를 끄면 아예 접속하지 않는다.
 @MainActor
 enum UpdateCheck {
-    static let feed = URL(string: "https://deskon.arapshow.net/version.json")!
+    static let feed = URL(string: "https://tools.arapshow.net/deskon/version.json")!
     private static let interval: TimeInterval = 30 * 24 * 60 * 60
     private static let defaults = UserDefaults.standard
 

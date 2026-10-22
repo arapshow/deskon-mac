@@ -26,7 +26,7 @@ mkdir -p "$APP/Contents/Resources"
 cp icon/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 codesign --force --sign - "$APP" >/dev/null 2>&1
 
-# 다른 사람에게 줄 dmg(소개 페이지 deskon.arapshow.net에서 받는 파일)
+# 다른 사람에게 줄 dmg(소개 페이지 tools.arapshow.net/deskon 에서 받는 파일)
 dmg/make-dmg.sh || { echo "dmg 만들기에 실패했습니다. 이 창 내용을 캡처해 Claude에게 보내 주세요."; pause; exit 1; }
 VER=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Info.plist)
 # 소개 페이지 폴더(site/)가 있는 비공개 저장소에서만. 공개 사본에는 없다.

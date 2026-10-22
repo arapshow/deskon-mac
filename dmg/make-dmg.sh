@@ -1,7 +1,7 @@
 #!/bin/bash
 # build/deskON.app으로 build/deskON-버전.dmg를 만든다(버전은 Info.plist).
 # 열면 deskON과 응용 프로그램 폴더가 나란히 있고, 배경에 끌어 놓으라는 화살표가 있다.
-# 아래 가운데에는 소개 페이지(deskon.arapshow.net)로 가는 deskON Guide 바로가기.
+# 아래 가운데에는 소개 페이지(tools.arapshow.net/deskon)로 가는 deskON Guide 바로가기.
 # 쓰는 법: dmg/make-dmg.sh (저장소 맨 위에서, 'deskON 만들기.command'가 부른다)
 set -e
 cd "$(dirname "$0")/.."
@@ -22,7 +22,7 @@ cat > "$STAGE/src/deskON Guide.webloc" <<'PLIST'
 <plist version="1.0">
 <dict>
 	<key>URL</key>
-	<string>https://deskon.arapshow.net/</string>
+	<string>https://tools.arapshow.net/deskon/</string>
 </dict>
 </plist>
 PLIST
