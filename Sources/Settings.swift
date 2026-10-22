@@ -70,7 +70,7 @@ final class Settings {
 
 // 소개 페이지(설명서). 설정 창 맨 아래 Guide가 연다.
 enum Guide {
-    static let url = URL(string: "https://deskon.arapshow.net/")!
+    static let url = URL(string: "https://tools.arapshow.net/deskon/")!
     static var version: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
     }
